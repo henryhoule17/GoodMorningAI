@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react'
 import { copy, linkIcon, loader, tick } from '../assets'
+import { useLazyGetSummaryQuery } from '../services/article'
 
 const Demo = () => {
-  const [topic, setTopic] = useState({
+  const [article, setArticle] = useState({
     url: '',
     summary: '',
   })
 
+  const [getSummary, { error, isFetching }] = useLazyGetSummaryQuery()
+
   const handleSubmit = async (e) => {
-    alert('submitted')
+
+    e.preventDefault();
+    const { data } = await getSummary({articleUrl: article.url})
+
+    if(data?.summary) {
+      const newArticle = { ...article, summary: data.summary }
+      setArticle(newArticle);
+      console.log(newArticle)
+    }
   }
 
   return (
@@ -19,7 +30,7 @@ const Demo = () => {
           <input 
             type="url" 
             placeholder="2024 Election, NVDA, Tech industry recruiting..."
-            value={topic.url}
+            value={article.url}
             onChange={(e) => setArticle({...article, url: e.target.value})}
             required
             className="url_input peer"
