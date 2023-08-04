@@ -1,6 +1,9 @@
 import Home from './pages/Home.jsx';
 import ForRecruiting from './pages/ForRecruiting.jsx';
 import Login from './pages/Login.jsx';
+import SignUp from './pages/SignUp.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import { AuthProvider, RequireAuth } from 'react-auth-kit';
 import { Routes, Route } from 'react-router-dom';
 import './App.css';
 
@@ -9,14 +12,24 @@ const App = () => {
     <main>
         <div className="main">
             <div className="gradient"/>
-            {/*<h1 className="text-9xl top-96 right-0 fixed text-slate-100">GoodMorningAI</h1>*/}
         </div>
         <div className="app">
-        <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/recruiting" element={<ForRecruiting />} />
-            <Route path="/login" element={<Login />} />
-         </Routes>
+          <AuthProvider authType = {'cookie'}
+                    authName={'_auth'}
+                    cookieDomain={window.location.hostname}
+                    cookieSecure={window.location.protocol === "https:"}>
+              <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/recruiting" element={<ForRecruiting />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="/dashboard" element={
+                    <RequireAuth loginPath='/login'>
+                      <Dashboard />
+                    </RequireAuth>
+                  } />
+              </Routes>
+          </AuthProvider>
          </div>
     </main>
   )

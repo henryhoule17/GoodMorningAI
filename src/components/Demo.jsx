@@ -16,6 +16,7 @@ const Demo = () => {
 
   const handleTestMessageClick = async (e) => {
     e.preventDefault();
+    console.log(phone, messageType)
     if(phone.length < 7 || !messageType) {
       setMissingInfo(true)
       return
@@ -24,7 +25,6 @@ const Demo = () => {
     try {
       const resp = await postTestMessage({ phone, messageType })
       setSentConfirmation(2)
-      console.log(resp)
       setResponse(resp['data']['message'])
       setTimeout(() => setSentConfirmation(1), 2000)
     } catch (err) {
@@ -72,7 +72,6 @@ const Demo = () => {
               <option value="">Select a message type</option>
               <option value="MQ">Motivational Quote</option>
               <option value="SP">Supportive and Positive</option>
-              <option value="NH">News Headlines</option>
               <option value="FF">Fun Facts</option>
               <option value="MD">Mean and Discouraging</option>
           </select>
@@ -101,10 +100,6 @@ const Demo = () => {
               <span className="font-satoshi font-normal text-gray-700">
               {error?.data?.error}
               </span>
-          </p>
-          ) : sentConfirmation == 2 ? (
-            <p className="font-inter font-bold text-black text-center">
-              <span className='green_blue_gradient'>Success!</span> info sent to server <br/>
           </p>
           ) : sentConfirmation == 3 ? (
             <p className="font-inter font-bold text-black text-center">

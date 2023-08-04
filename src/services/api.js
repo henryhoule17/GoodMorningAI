@@ -8,12 +8,12 @@ export const topicApi = createApi({
     }),
     endpoints: (builder) => ({
         postTestMessage: builder.mutation({
-            query: ({ phone, topic }) => ({
+            query: ({ phone, messageType }) => ({
                 url: '/test-message',
                 method: 'POST',
                 body: {
                     phoneNumber: phone,
-                    topicName: topic,
+                    messageType: messageType,
                 },
             }),
         }),

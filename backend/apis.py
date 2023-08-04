@@ -1,43 +1,125 @@
-from flask import Flask, jsonify, request
+import sys
+from flask import Flask, request, jsonify, Response
+import os
+import jwt
+import datetime
 from flask_cors import CORS
 from dotenv import load_dotenv
-from logic import getMotivationalQuote, getPositiveMessage, getNewsHeadlines, getFunFact, getMeanQuote
-
-app = Flask(__name__)
-CORS(app)#, origins='http://localhost:5173')
-
-userInfo = {
-    'phone': "",
-    'topic': ""
-}
+from logic import getMotivationalQuote, getPositiveMessage, getFunFact, getMeanQuote
+from pymongo.mongo_client import MongoClient
 
 load_dotenv()
+uri = os.getenv('MONGO_URI')
 
-@app.route('/test-message', methods=['POST', 'GET'])
+app = Flask(__name__)
+
+client = MongoClient(uri)
+CORS(app, origins='http://localhost:5173')
+
+userInfo = {
+    'email': "",
+    'password': "",
+    'info': {
+        'name': "",
+        'phone': "",
+        'messageType': "",
+        'timeZone': "",
+    },
+}
+
+@app.route('/', methods=['POST', 'GET', 'OPTIONS'])
+def handle_root():
+    return jsonify({'message': 'Hello World!'}), 200
+
+#################### TEST MESSAGE ####################
+@app.route('/test-message/', methods=['POST', 'GET'])
 def handle_test_message():
     data = request.get_json()
 
     userInfo['phone'] = data.get('phoneNumber')
-    userInfo['topic'] = data.get('topicName')
+    userInfo['messageType'] = data.get('messageType')
 
-    # now you can do whatever you need to do with phone_number and topic_name
-    if userInfo['topic'] == 'MQ':
+    try:
+        client.admin.command('ping')
+        print("Pinged your deployment. You successfully connected to MongoDB!")
+    except Exception as e:
+        print(e)
+
+    if userInfo['messageType'] == 'MQ':
         message = getMotivationalQuote()
-    elif userInfo['topic'] == 'SP':
+    elif userInfo['messageType'] == 'SP':
         message = getPositiveMessage()
-    elif userInfo['topic'] == 'NH':
-        message = getNewsHeadlines()
-    elif userInfo['topic'] == 'FF':
+    elif userInfo['messageType'] == 'FF':
         message = getFunFact()
     else:
-        message = getMeanQuote()
+       message = getMeanQuote()
 
-    # return a success message
     return jsonify({'message': message}), 200
 
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
+#################### AUTHENTICATION ####################
+@app.route('/auth/', methods=['POST', 'GET'])
+def auth_check():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    user_database = client['GoodMorningAIDatabase']['User Data']
+
+    user_doc = user_database.find_one({'email': email})
+
+    if user_doc:
+        if user_doc['password'] == password:
+            token = jwt.encode({
+                'user_id': email.split('@')[0],
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+            }, 'SECRET_KEY', algorithm='HS256')
+
+            refresh_token = jwt.encode({
+                'user_id': email.split('@')[0],
+                'type': 'refresh',
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30),
+            }, 'SECRET_KEY', algorithm='HS256')
+
+            return jsonify({
+                'token': token, 
+                'expiresIn': 3600 * 24,
+                'tokenType': 'Bearer',
+                'authUserState': user_doc['info'],
+                'refresh_token': refresh_token,
+                'refreshTokenExpiresIn': 3600 * 24 * 30,
+            }), 200
+        else:
+            return jsonify({'error': 'Incorrect password'}), 401
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+#################### SIGN UP ####################
+@app.route('/signup/', methods=['POST', 'GET'])
+def sign_up_user():
+    data = request.get_json()    
+    uInfo = {
+        'email': data.get('email'),
+        'password': data.get('password'),
+        'info': {
+            'fname': data.get('firstName'),
+            'lname': data.get('lastName'),
+            'email': data.get('email'),
+            'phone': '',
+            'messageSettings': '',
+            'timeZone': '',
+        },
+    }
+
+    user_database = client['GoodMorningAIDatabase']['User Data']
+
+    existing_user = user_database.find_one({'email': uInfo['email']})
+    if existing_user:
+        return jsonify({'status': 'preexisting'}), 200
+    
+    response = user_database.insert_one(uInfo)
+
+    return jsonify({'response': str(response.inserted_id), 'status': 'success'}), 200
+    
 
 if __name__ == "__main__":
-     app.run(port=5000)
+    app.run(port=5000, debug=True)

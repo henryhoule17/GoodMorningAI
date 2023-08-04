@@ -1,17 +1,9 @@
-import LogInForm from "../components/LogInForm"
+import SignUpForm from "../components/SignUpForm"
 import {logo, arrow} from '../assets'
 import { useNavigate } from 'react-router-dom'
-import { useAuthUser } from "react-auth-kit"
-import { useEffect } from "react"
 
 const Login = () => {
     const navigate = useNavigate()
-    const auth = useAuthUser()
-    
-    useEffect(() => {
-        if(auth())
-            navigate('/dashboard')
-    }, [])
 
   return (
     <div className="w-full max-w-sm items-center justify-center">
@@ -24,8 +16,8 @@ const Login = () => {
                 GoodMorningAI
             </h1>
         </div>
-        <div className="pb-40"></div>
-        <LogInForm />
+        <div className="pb-32"></div>
+        <SignUpForm />
     </div>
   )
 }
