@@ -4,15 +4,24 @@ import os
 
 MODEL = "gpt-3.5-turbo"
 
-def getMotivationalQuote():
-    chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", 
+############ MOTIVATIONAL QUOTES ############
+def getMotivationalQuote(topic):
+    Motivational_Quote = openai.ChatCompletion.create(
+        model=MODEL, 
         messages=[
             {
                 "role": "user", 
-                "content": "Hello world"
-            }
-        ])
-    print(chat_completion)
+                "content": f"Give me 10 motivational quotes with no repeats from people who are really good in the area of {topic_area} with no extra text",
+            },
+        ]
+    )
+
+    mquotes = Motivational_Quote['choices'][0]['message']['content']
+    mquotes = mquotes.split('\n')
+    mquotes = [mquote[3:] for mquote in mquotes]
+    mquote = random.choice(mquotes)
+
+    
     return "You are doing great!"
 
 def getPositiveMessage():
@@ -26,7 +35,7 @@ def getMeanQuote():
 
 def processTestMessage(user, topic, messageType):
     if messageType == 'MQ':
-        message = getMotivationalQuote()
+        message = getMotivationalQuote(topic)
     elif messageType == 'SP':
         message = getPositiveMessage()
     elif messageType == 'FF':
