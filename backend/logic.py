@@ -20,8 +20,9 @@ def getMotivationalQuote(topic):
     mquotes = mquotes.split('\n')
     mquotes = [mquote[3:] for mquote in mquotes]
     mquote = random.choice(mquotes)
+    # hi
 
-    
+
     return "You are doing great!"
 
 def getPositiveMessage():
