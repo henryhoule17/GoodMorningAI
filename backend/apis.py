@@ -5,27 +5,21 @@ import jwt
 import datetime
 from flask_cors import CORS
 from dotenv import load_dotenv
-from logic import getMotivationalQuote, getPositiveMessage, getFunFact, getMeanQuote
+from logic import processTestMessage
 from pymongo.mongo_client import MongoClient
 
 load_dotenv()
 uri = os.getenv('MONGO_URI')
+jwt_key = os.getenv('JWT_KEY')
 
 app = Flask(__name__)
 
 client = MongoClient(uri)
 CORS(app, origins='http://localhost:5173')
 
-userInfo = {
-    'email': "",
-    'password': "",
-    'info': {
-        'name': "",
-        'phone': "",
-        'messageType': "",
-        'timeZone': "",
-    },
-}
+user_database = client['GoodMorningAIDatabase']['User Data']
+
+
 
 @app.route('/', methods=['POST', 'GET', 'OPTIONS'])
 def handle_root():
@@ -35,24 +29,24 @@ def handle_root():
 @app.route('/test-message/', methods=['POST', 'GET'])
 def handle_test_message():
     data = request.get_json()
+    # print("Data: ", data)
+    token = data['token']
 
-    userInfo['phone'] = data.get('phoneNumber')
-    userInfo['messageType'] = data.get('messageType')
+    user = verify_token(token)
+    if not user:
+        print("User not found")
+        return jsonify({'error': "User Not Found"}), 401
+    
+    phone = data['phone']
+    if not 'phone' in user['info']:
+        user_database.update_one({'email': user['email']}, {'$set': {'info.phone': phone}})
 
-    try:
-        client.admin.command('ping')
-        print("Pinged your deployment. You successfully connected to MongoDB!")
-    except Exception as e:
-        print(e)
+    # print("User: ", user)
 
-    if userInfo['messageType'] == 'MQ':
-        message = getMotivationalQuote()
-    elif userInfo['messageType'] == 'SP':
-        message = getPositiveMessage()
-    elif userInfo['messageType'] == 'FF':
-        message = getFunFact()
-    else:
-       message = getMeanQuote()
+    messageType = data['messageType']
+    topic = data['topic']
+
+    message = processTestMessage(user, topic, messageType)
 
     return jsonify({'message': message}), 200
 
@@ -63,22 +57,22 @@ def auth_check():
     email = data.get('email')
     password = data.get('password')
 
-    user_database = client['GoodMorningAIDatabase']['User Data']
-
     user_doc = user_database.find_one({'email': email})
 
     if user_doc:
         if user_doc['password'] == password:
             token = jwt.encode({
-                'user_id': email.split('@')[0],
+                'user_id': email,
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
-            }, 'SECRET_KEY', algorithm='HS256')
+            }, jwt_key, algorithm='HS256')
+            print(type(token))
+            print(type("hello"))
 
             refresh_token = jwt.encode({
-                'user_id': email.split('@')[0],
+                'user_id': email,
                 'type': 'refresh',
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30),
-            }, 'SECRET_KEY', algorithm='HS256')
+            }, jwt_key, algorithm='HS256')
 
             return jsonify({
                 'token': token, 
@@ -110,8 +104,6 @@ def sign_up_user():
         },
     }
 
-    user_database = client['GoodMorningAIDatabase']['User Data']
-
     existing_user = user_database.find_one({'email': uInfo['email']})
     if existing_user:
         return jsonify({'status': 'preexisting'}), 200
@@ -120,6 +112,20 @@ def sign_up_user():
 
     return jsonify({'response': str(response.inserted_id), 'status': 'success'}), 200
     
+#################### VERIFY TOKEN ####################
+def verify_token(token):
+    try:
+        # print("VT Token: ", token)
+        decoded = jwt.decode(token, jwt_key, algorithms=['HS256'])
+        user_id = decoded.get('user_id')
+        user = user_database.find_one({'email': user_id})
+        if not user:
+            return None
+        else:
+            return user
+    except Exception as e:
+        print("Verification Error: ", e)
+        return None
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
