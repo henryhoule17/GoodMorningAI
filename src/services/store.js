@@ -1,17 +1,16 @@
 import { configureStore } from "@reduxjs/toolkit"
-import { topicApi } from "./api"
-import { authApi } from "./auth"
+import { generalApi } from "./api"
 import drawerReducer from "./drawerState"
+import authTokenReducer from "./authToken"
 
 export const store = configureStore({
     reducer: {
-        [topicApi.reducerPath]: topicApi.reducer,
-        [authApi.reducerPath]: authApi.reducer,
-        drawer: drawerReducer
+        [generalApi.reducerPath]: generalApi.reducer,
+        drawer: drawerReducer,
+        authToken: authTokenReducer,
     },
     middleware: (getDefaultMiddleware) => (
         getDefaultMiddleware()
-            .concat(topicApi.middleware)
-            .concat(authApi.middleware)
+            .concat(generalApi.middleware)
         )
 });

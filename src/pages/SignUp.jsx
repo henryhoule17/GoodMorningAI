@@ -1,5 +1,5 @@
 import SignUpForm from "../components/SignUpForm"
-import {logo, arrow} from '../assets'
+import { logo, arrow } from '../assets'
 import { useNavigate } from 'react-router-dom'
 
 const Login = () => {

@@ -1,23 +1,23 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-export const topicApi = createApi({
-    reducerPath: 'topicApi',
+export const generalApi = createApi({
+    reducerPath: 'generalApi',
 
     baseQuery: fetchBaseQuery({ 
         baseUrl: 'http://127.0.0.1:5000',
     }),
     endpoints: (builder) => ({
-        postTestMessage: builder.mutation({
-            query: ({ phone, messageType }) => ({
-                url: '/test-message',
+        postGeneral: builder.mutation({
+            query: ({ messageData, endpoint }) => ({
+                url: endpoint,
                 method: 'POST',
-                body: {
-                    phoneNumber: phone,
-                    messageType: messageType,
+                body: messageData,
+                headers: {
+                    'Content-Type': 'application/json',
                 },
             }),
         }),
     }),
 })
 
-export const { usePostTestMessageMutation } = topicApi;
+export const { usePostGeneralMutation } = generalApi;

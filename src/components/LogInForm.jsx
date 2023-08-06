@@ -1,31 +1,36 @@
 import { useSignIn } from 'react-auth-kit'
 import { useState } from 'react'
-import { usePostAuthCheckMutation } from '../services/auth'
+import { usePostGeneralMutation } from '../services/api'
 import { Link, useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { setToken } from '../services/authToken'
 
-import React from 'react'
-import { set } from 'mongoose'
 
 const LogInForm = () => {
     const navigate = useNavigate()
+    const dispatch = useDispatch()
     const signIn = useSignIn()
-    const [formData, setFormData] = useState({email: '', password: ''})
+    const [messageData, setMessageData] = useState({email: '', password: ''})
     const [missingInfo, setMissingInfo] = useState(false)
     const [success, setSuccess] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
 
-    const [postAuthCheck, { error, isLoading, isSuccess }] = usePostAuthCheckMutation()
+    const [postGeneral, { isLoading }] = usePostGeneralMutation()
 
     const handleSubmit = async (e) => {
+        setMissingInfo(false)
+        setErrorMsg('')
+
+
         e.preventDefault()
-        if(formData.email.length < 7 || !formData.password) {
+        if(messageData.email.length < 7 || !messageData.password) {
             setMissingInfo(true)
             return
         }
         setMissingInfo(false)
-        console.log(formData)
+        console.log(messageData)
         
-        const resp = await postAuthCheck({formData, endpoint: '/auth/'})
+        const resp = await postGeneral({messageData, endpoint: '/auth/'})
         if(!resp?.error?.data?.error) {
             
             signIn(
@@ -38,10 +43,11 @@ const LogInForm = () => {
                     refreshTokenExpireIn: resp.data.refreshTokenExpireIn     // Only if you are using refreshToken feature
                 }
             )
+            dispatch(setToken(resp.data.token))
             setSuccess(true)
             setTimeout(() => {
                 setSuccess(false)
-                navigate('/dashboard')
+                navigate('/user/')
             }, 1000)
         } else {
             setErrorMsg(resp.error.data.error)
@@ -72,29 +78,31 @@ const LogInForm = () => {
                             id='username'
                             className='w-full rounded-md mb-4 bg-amber-100 py-2.5 pl-3 pr-12 text-sm font-satoshi focus:outline-none font-medium focus:bg-amber-50' 
                             placeholder='Email'
-                            value={formData.email}
-                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            value={messageData.email}
+                            onChange={(e) => setMessageData({...messageData, email: e.target.value})}
                         />
                         <input 
                             type='password'
                             id='password'
                             className='w-full rounded-md bg-amber-100 py-2.5 pl-3 pr-12 text-sm font-satoshi focus:outline-none font-medium focus:bg-amber-50' 
                             placeholder='Password'
-                            value={formData.password}
-                            onChange={(e) => setFormData({...formData, password: e.target.value})}
+                            value={messageData.password}
+                            onChange={(e) => setMessageData({...messageData, password: e.target.value})}
                         />
                     </form>
                 </div>
                 <div className='pb-5 pt-5'>
+                    {isLoading ? 
+                    <p className='text-gray-700 text-lg font-bold pt-2 pb-10'>Loading...</p>
+                    : (
                     <button
                         type="button" 
                         onClick={(e) => handleSubmit(e)} 
                         className="rounded-md font-satoshi bg-amber-300 py-1.5 px-9 text-xl font-bold 
                         transition-all hover:bg-amber-100 hover:px-12 "
                     >
-                        Log In
-                    </button>
-                    {/*error && <p className='text-red-500 text-sm pt-2 pb-10'>{error.message}</p>*/}
+                        Log In!
+                    </button>)}
                 </div>
                 <div className='justify-center flex align-center'>
                     <Link className='font-satoshi font-bold text-gray-600 text-sm hover:text-gray-500 hover:underline' to='/signup'>
@@ -115,7 +123,7 @@ const LogInForm = () => {
                 </div>
                 <div>
                     {errorMsg != "" ? 
-                        <p className='text-red-500 text-sm pt-2 pb-4'>
+                        <p className='text-red-500 text-sm pb-4'>
                             {errorMsg}
                         </p> 
                         : <div className='pb-5'></div>

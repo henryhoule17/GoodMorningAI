@@ -1,34 +1,40 @@
 import { useState, useEffect } from 'react'
-import { copy, linkIcon, loader, tick } from '../assets'
-import { usePostTestMessageMutation } from '../services/api'
+import { loader } from '../assets'
+import { usePostGeneralMutation } from '../services/api'
+import Button from '@mui/material/Button'
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
+import { useSelector } from 'react-redux';
+import { selectAuthTokenValue } from '../services/authToken';
 
 const Demo = () => {
-  const [messageType, setmessageType] = useState("")
-  const [topic, setTopic] = useState("")
-  const [phone, setPhone] = useState("")
-  const [sentConfirmation, setSentConfirmation] = useState(1)
+  const userToken = useSelector(selectAuthTokenValue)
+
+  const [messageData, setMessageData] = useState({
+    token: userToken,
+    phone: '',
+    messageType: '',
+    topic: '',
+  })
   const [missingInfo, setMissingInfo] = useState(false)
   const [response, setResponse] = useState("")
 
-  const [postTestMessage, { error, isFetching }] = usePostTestMessageMutation()
+  const [postGeneral, { error, isFetching }] = usePostGeneralMutation()
 
   const handleTestMessageClick = async (e) => {
     e.preventDefault();
-    console.log(phone, messageType)
-    if(phone.length < 7 || !messageType) {
+    if(messageData.phone.length < 7 || !messageData.messageType || !messageData.topic) {
       setMissingInfo(true)
       return
     }
+    console.log(messageData.token)
     setMissingInfo(false)
     try {
-      const resp = await postTestMessage({ phone, messageType })
-      setSentConfirmation(2)
+      console.log(messageData)
+      const resp = await postGeneral({ messageData, endpoint: '/test-message/' })
       setResponse(resp['data']['message'])
-      setTimeout(() => setSentConfirmation(1), 2000)
     } catch (err) {
-      setSentConfirmation(3)
+      console.log(err)
       // handle error here
     }
   }
@@ -43,20 +49,20 @@ const Demo = () => {
         <div className='flex justify-center'>
           <PhoneInput
               country={'us'}
-              value={phone}
-              onChange={phone => setPhone(phone)}
+              value={messageData.phone}
+              onChange={phone => setMessageData({...messageData, phone})}
           />
         </div>
         <h2 className='font-satoshi font-bold text-gray-600 text-xl mt-5'>
-        Enter a topic or goal you're interested in
+        Enter a topic or field you're interested in
         </h2>
         <form className="relative flex justify-center items-center w-[100%]">
           <input 
             type='text'
             className='url_input peer' 
-            placeholder='Weightlifting, Coding, Recruiting, etc.'
-            value={topic}
-            onChange={e => setTopic(e.target.value)}
+            placeholder='Weightlifting, Software, Finance, etc.'
+            value={messageData.topic}
+            onChange={e => setMessageData({...messageData, topic: e.target.value})}
           />
         </form>
         <h2 className='font-satoshi font-bold text-gray-600 text-xl mt-5'>
@@ -64,8 +70,8 @@ const Demo = () => {
         </h2>
         <form className="relative flex justify-center items-center w-[100%]">
           <select 
-              value={messageType}
-              onChange={e => setmessageType(e.target.value)}
+              value={messageData.messageType}
+              onChange={e => setMessageData({...messageData, messageType: e.target.value})}
               required
               className="url_input peer"
           >
@@ -79,12 +85,27 @@ const Demo = () => {
       <h2 className='font-satoshi font-bold text-gray-600 text-xl mt-5'>
         Now click below to see the magic happen!
       </h2>
-        <div className="flex justify-center items-center gap-6 mt-3 max-h-60 overflow-y-auto w-[100%]">
-          {!isFetching ? (<button className='border border-orange-400 font-bold text-lg rounded-md py-1 px-8 transition-all
-            hover:bg-white hover:text-orange-400 font-inter bg-orange-400 text-white'
-            onClick={handleTestMessageClick}>
-            Try it out!
-          </button>) : (null)}
+        <div className="flex justify-center items-center gap-6 mt-3 max-h-60 overflow-y-auto w-[100%] pb-2">
+          {!isFetching ? (
+            <Button 
+              sx={{
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                borderRadius: '4px',
+                padding: '8px 16px',
+                transition: 'all 0.2s',
+                backgroundColor: '#FFA500',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: '#FFC500',
+                  boxShadow: '4px 4px 4px rgba(0, 0, 0, 0.25)',
+                }
+              }}
+              variant="contained"
+              onClick={handleTestMessageClick}>
+              Try it out!
+            </Button>
+          ) : (null)}
         </div>
         {missingInfo ? (
           <p className="text-black font-inter mt-3 font-bold text-center">
@@ -101,11 +122,8 @@ const Demo = () => {
               {error?.data?.error}
               </span>
           </p>
-          ) : sentConfirmation == 3 ? (
-            <p className="font-inter font-bold text-black text-center">
-              Your request failed :( <br/>
-          </p>
-          ) : (null)
+          )
+          : (null)
         }
         </div>
           {response != "" ? (

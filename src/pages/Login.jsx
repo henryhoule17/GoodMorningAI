@@ -1,5 +1,5 @@
 import LogInForm from "../components/LogInForm"
-import {logo, arrow} from '../assets'
+import { logo, arrow } from '../assets'
 import { useNavigate } from 'react-router-dom'
 import { useAuthUser } from "react-auth-kit"
 import { useEffect } from "react"
@@ -10,7 +10,7 @@ const Login = () => {
     
     useEffect(() => {
         if(auth())
-            navigate('/dashboard')
+            navigate('/user/')
     }, [])
 
   return (

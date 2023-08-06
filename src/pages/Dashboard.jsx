@@ -10,7 +10,7 @@ const Dashboard = () => {
     const auth = useAuthUser()
 
   return (
-    <div>
+    <div className="flex">
         <NavBar />
         <DashDrawer />
         <div className="flex-col justify-center items-center mt-20">

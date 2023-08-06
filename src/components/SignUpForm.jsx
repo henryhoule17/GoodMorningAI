@@ -1,14 +1,12 @@
-import { useSignIn } from 'react-auth-kit'
 import { useState } from 'react'
-import { usePostAuthCheckMutation } from '../services/auth'
+import { usePostGeneralMutation } from '../services/api'
 import { Link, useNavigate } from 'react-router-dom'
 
 import React from 'react'
-import { set } from 'mongoose'
 
 const SignUpForm = () => {
     const navigate = useNavigate()
-    const [formData, setFormData] = useState({email: '', password: '', firstName: '', lastName: ''})
+    const [messageData, setMessageData] = useState({email: '', password: '', firstName: '', lastName: ''})
     const [checkData, setCheckData] = useState({emailcheck: '', passwordcheck: ''})
     const [missingInfo, setMissingInfo] = useState(false)
     const [passwordDontMatch, setPasswordDontMatch] = useState(false)
@@ -16,29 +14,29 @@ const SignUpForm = () => {
     const [success, setSuccess] = useState(false)
     const [alreadyExists, setAlreadyExists] = useState(false)
 
-    const [postAuthCheck, { error, isLoading }] = usePostAuthCheckMutation()
+    const [postGeneral, { error, isLoading }] = usePostGeneralMutation()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if(formData.email.length < 7 || !formData.password || !formData.firstName || !formData.lastName) {
+        if(messageData.email.length < 7 || !messageData.password || !messageData.firstName || !messageData.lastName) {
             setMissingInfo(true)
             return
         }
         setMissingInfo(false)
 
-        if(formData.email !== checkData.emailcheck) {
+        if(messageData.email !== checkData.emailcheck) {
             setEmailDontMatch(true)
             return
         }
         setEmailDontMatch(false)
 
-        if(formData.password !== checkData.passwordcheck) {
+        if(messageData.password !== checkData.passwordcheck) {
             setPasswordDontMatch(true)
             return
         }
         setPasswordDontMatch(false)
 
-        const resp = await postAuthCheck({formData, endpoint: '/signup/'})
+        const resp = await postGeneral({messageData, endpoint: '/signup/'})
         console.log("Response: ", resp)
         console.log("Error: ", error)
         if(resp['data']['status'] == 'success') {
@@ -77,22 +75,22 @@ const SignUpForm = () => {
                             type='text'
                             className='w-full rounded-md mb-4 bg-amber-100 py-2.5 pl-3 pr-12 text-sm font-satoshi focus:outline-none font-medium focus:bg-amber-50' 
                             placeholder='First Name'
-                            value={formData.firstName}
-                            onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                            value={messageData.firstName}
+                            onChange={(e) => setMessageData({...messageData, firstName: e.target.value})}
                         />
                         <input 
                             type='text'
                             className='w-full rounded-md mb-6 bg-amber-100 py-2.5 pl-3 pr-12 text-sm font-satoshi focus:outline-none font-medium focus:bg-amber-50' 
                             placeholder='Last Name'
-                            value={formData.lastName}
-                            onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                            value={messageData.lastName}
+                            onChange={(e) => setMessageData({...messageData, lastName: e.target.value})}
                         />
                         <input 
                             type='text'
                             className='w-full rounded-md mb-4 bg-amber-100 py-2.5 pl-3 pr-12 text-sm font-satoshi focus:outline-none font-medium focus:bg-amber-50' 
                             placeholder='Email'
-                            value={formData.email}
-                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            value={messageData.email}
+                            onChange={(e) => setMessageData({...messageData, email: e.target.value})}
                         />
                         <input 
                             type='text'
@@ -105,8 +103,8 @@ const SignUpForm = () => {
                             type='password'
                             className='w-full rounded-md mb-4 bg-amber-100 py-2.5 pl-3 pr-12 text-sm font-satoshi focus:outline-none font-medium focus:bg-amber-50' 
                             placeholder='Password'
-                            value={formData.password}
-                            onChange={(e) => setFormData({...formData, password: e.target.value})}
+                            value={messageData.password}
+                            onChange={(e) => setMessageData({...messageData, password: e.target.value})}
                         />
                         <input 
                             type='password'

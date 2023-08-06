@@ -3,6 +3,7 @@ import ForRecruiting from './pages/ForRecruiting.jsx';
 import Login from './pages/Login.jsx';
 import SignUp from './pages/SignUp.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import TestMessage from './pages/TestMessage.jsx';
 import { AuthProvider, RequireAuth } from 'react-auth-kit';
 import { Routes, Route } from 'react-router-dom';
 import './App.css';
@@ -19,13 +20,16 @@ const App = () => {
                     cookieDomain={window.location.hostname}
                     cookieSecure={window.location.protocol === "https:"}>
               <Routes>
-                  <Route path="/" element={<Home />} />
+                  <Route path="//*" element={<Home />} />
                   <Route path="/recruiting" element={<ForRecruiting />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
-                  <Route path="/dashboard" element={
+                  <Route path="/user//*" element={
                     <RequireAuth loginPath='/login'>
-                      <Dashboard />
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/testmsg" element={<TestMessage />} />
+                      </Routes>
                     </RequireAuth>
                   } />
               </Routes>

@@ -5,11 +5,16 @@ import { useAuthUser } from "react-auth-kit"
 import ProfileAvatar from './ProfileAvatar'
 import  IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Icon } from '@mui/material'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useDispatch } from 'react-redux'
 import { toggleDrawer } from '../services/drawerState'
+import { useSelector } from 'react-redux';
+import { selectDrawerOpen } from '../services/drawerState';
+
+
 
 const NavBar = () => {
+    const drawerOpen = useSelector(selectDrawerOpen)
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const auth = useAuthUser()
@@ -24,7 +29,7 @@ const NavBar = () => {
     }, [])
 
   return (
-    <div style={{zIndex: 1300}}>
+    <div style={{zIndex: 1300, position: 'relative'}}>
       <nav className="fixed top-0 left-0 right-0 flex items-center justify-between w-full lg:mb-7 lg:pt-3 pt-0 mb-2 bg-white shadow-md px-10 lg:py-3 py-1">
         <div className="flex justify-between items-center max-h-full">
             {isAuth ? 
@@ -35,27 +40,33 @@ const NavBar = () => {
                     edge="start"
                     sx={{ mr: 2, }}
                 >
-                    <MenuIcon/>
+                    {drawerOpen ? <ChevronLeftIcon /> : <MenuIcon/>}
                 </IconButton>
             : null
             }
-            <img src={logo} alt="NewsPulse_logo" className="w-11 object-contain" />
-            <h1 className="font-satoshi font-extrabold text-4xl text-black pr-20">
-                GoodMorningAI
-            </h1>
-            <button 
-                className={`max-h-full font-satoshi ${location.pathname == '/' ? 'text-amber-400' : 'text-black'} rounded-md font-bold px-6 text-xl hover:text-amber-400`}
-            onClick={ isAuth ? () => navigate('/dashboard') : () => navigate('/')}
-            >
-                Home
+            <button onClick={() => navigate('/')}>
+                <div className='flex'>
+                    <img src={logo} alt="NewsPulse_logo" className="w-11 object-contain" />
+                    <h1 className="font-satoshi font-extrabold text-4xl text-black pr-20">
+                        GoodMorningAI
+                    </h1>
+                </div>
             </button>
             {isAuth ? null :
-                <button 
-                    className={`max-h-full font-satoshi ${location.pathname == '/recruiting' ? 'text-amber-400' : 'text-black'} rounded-md font-bold px-6 text-xl hover:text-amber-400`}
-                    onClick={() => navigate('/recruiting')}
-                >
-                    For Recruiting
-                </button>
+                <>
+                    <button 
+                        className={`max-h-full font-satoshi ${location.pathname == '/' ? 'text-amber-400' : 'text-black'} rounded-md font-bold px-6 text-xl hover:text-amber-400`}
+                    onClick={ isAuth ? () => navigate('/user/') : () => navigate('/')}
+                    >
+                        Home
+                    </button>
+                    <button 
+                        className={`max-h-full font-satoshi ${location.pathname == '/recruiting' ? 'text-amber-400' : 'text-black'} rounded-md font-bold px-6 text-xl hover:text-amber-400`}
+                        onClick={() => navigate('/recruiting')}
+                    >
+                        For Recruiting
+                    </button>
+                </>
             }
         </div>
         <div>

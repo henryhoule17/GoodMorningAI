@@ -10,7 +10,6 @@ import { profileBlank } from '../assets'
 import { useAuthUser, useSignOut } from "react-auth-kit"
 import { useNavigate } from 'react-router-dom';
 import PositionedSnackBar from './PositionedSnackBar';
-import { set } from 'mongoose';
 
 const settings = ['Profile', 'Settings', 'Help', 'Logout'];
 
@@ -29,14 +28,12 @@ const ProfileAvatar = () => {
       const handleCloseUserMenu = (action) => {
         switch (action) {
             case 'Profile':
-                console.log('Profile')
+                setSnackBarOpen(true)
                 break;
             case 'Settings':
-                console.log('Settings')
                 setSnackBarOpen(true)
                 break;
             case 'Help':
-                console.log('Dashboard')
                 setSnackBarOpen(true)
                 break;
             case 'Logout':
